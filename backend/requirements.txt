@@ -1,9 +1,19 @@
+# ── Web framework ──────────────────────────────────────────────────────────
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
-ultralytics==8.1.34
-opencv-python==4.10.1.26
-numpy>=1.24.3
-pillow>=11.0.0
-torch>=2.5.0
-torchvision>=0.20.0
 python-multipart==0.0.6
+
+# ── Image processing ────────────────────────────────────────────────────────
+# opencv-python-headless is required on Render (headless Linux, no libGL.so.1)
+opencv-python-headless==4.10.0.84
+pillow>=10.0.0
+numpy>=1.24.3,<2.0.0
+
+# ── Deep learning (CPU-only builds – much smaller, no CUDA needed on Render) ─
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.2.2+cpu
+torchvision==0.17.2+cpu
+
+# ── YOLOv12 / Ultralytics ───────────────────────────────────────────────────
+# 8.1.34 is the version the best.pt model was trained with
+ultralytics==8.1.34
