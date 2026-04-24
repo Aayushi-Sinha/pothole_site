@@ -4,16 +4,18 @@ uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 
 # ── Image processing ────────────────────────────────────────────────────────
-# opencv-python-headless is required on Render (headless Linux, no libGL.so.1)
-opencv-python-headless==4.10.0.84
-pillow>=10.0.0
+# opencv-python-headless = no libGL.so.1 needed (required on headless servers)
+opencv-python-headless>=4.8.0,<5.0.0
+pillow>=10.0.0,<12.0.0
+
+# ── NumPy: cap below 2.0 — ultralytics 8.1.x uses deprecated numpy 1.x APIs ─
 numpy>=1.24.3,<2.0.0
 
-# ── Deep learning (CPU-only builds – much smaller, no CUDA needed on Render) ─
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.2.2+cpu
-torchvision==0.17.2+cpu
+# ── Deep learning ────────────────────────────────────────────────────────────
+# Install torch from PyPI (no extra-index-url needed).
+# These are CPU-capable by default; CUDA is optional and unused on Render.
+torch>=2.0.0,<3.0.0
+torchvision>=0.15.0,<1.0.0
 
-# ── YOLOv12 / Ultralytics ───────────────────────────────────────────────────
-# 8.1.34 is the version the best.pt model was trained with
+# ── YOLOv12 / Ultralytics ────────────────────────────────────────────────────
 ultralytics==8.1.34
