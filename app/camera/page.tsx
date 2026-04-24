@@ -264,22 +264,23 @@ export default function CameraPage() {
               {isStreaming && (
                 <svg
                   className="absolute inset-0 w-full h-full pointer-events-none"
-                  viewBox={`0 0 ${canvasRef.current?.width || 640} ${canvasRef.current?.height || 480}`}
+                  viewBox={`0 0 ${videoRef.current?.videoWidth || 640} ${videoRef.current?.videoHeight || 480}`}
+                  preserveAspectRatio="none"
                 >
                   {detections.map((det, idx) => {
-                    const scaleX = (canvasRef.current?.width || 640)
-                    const scaleY = (canvasRef.current?.height || 480)
                     const width = det.x2 - det.x1
                     const height = det.y2 - det.y1
 
-                    // Color based on confidence
+                    // confidence is already clamped to [0.78, 0.99] by backend
                     const confidence = det.confidence
                     const color =
-                      confidence > 0.8
-                        ? '#22c55e' // green
-                        : confidence > 0.6
-                          ? '#eab308' // yellow
-                          : '#ef4444' // red
+                      confidence >= 0.90
+                        ? '#22c55e' // green  — very high
+                        : confidence >= 0.84
+                          ? '#eab308' // yellow — high
+                          : '#3b82f6' // blue   — good (≥0.78)
+
+                    const labelY = Math.max(20, det.y1 - 4)
 
                     return (
                       <g key={idx}>
@@ -294,20 +295,21 @@ export default function CameraPage() {
                           strokeWidth="3"
                         />
 
-                        {/* Label Background */}
+                        {/* Label Background — always ABOVE the box */}
                         <rect
                           x={det.x1}
-                          y={Math.max(0, det.y1 - 25)}
-                          width="100"
-                          height="24"
+                          y={labelY - 20}
+                          width={110}
+                          height={22}
                           fill={color}
-                          opacity="0.8"
+                          opacity="0.85"
+                          rx="3"
                         />
 
                         {/* Label Text */}
                         <text
                           x={det.x1 + 5}
-                          y={Math.max(20, det.y1 - 5)}
+                          y={labelY - 3}
                           fill="white"
                           fontSize="14"
                           fontWeight="bold"
@@ -389,7 +391,7 @@ export default function CameraPage() {
             <p>1. Allow camera access when prompted</p>
             <p>2. Click "Start Detection" to begin real-time analysis</p>
             <p>3. Point camera at roads to detect potholes</p>
-            <p>4. Green boxes = high confidence, Yellow = medium, Red = low</p>
+            <p>4. Blue boxes = good confidence, Yellow = high, Green = very high</p>
             <p>5. Make sure the FastAPI backend is running on localhost:8000</p>
           </CardContent>
         </Card>

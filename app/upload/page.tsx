@@ -265,7 +265,7 @@ export default function UploadPage() {
                 </Card>
 
                 {/* Detections List */}
-                {result.detections.length > 0 && (
+                {result?.detections && result.detections.length > 0 && (
                   <Card className="bg-slate-800/50 border-slate-700">
                     <CardHeader>
                       <CardTitle className="text-white text-sm">
