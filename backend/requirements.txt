@@ -8,3 +8,6 @@ torchvision>=0.15.0,<1.0.0
 
 # ── YOLOv12 / Ultralytics ────────────────────────────────────────────────────
 ultralytics==8.1.34
+
+fastapi
+uvicorn[standard]
