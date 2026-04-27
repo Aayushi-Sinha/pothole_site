@@ -6,11 +6,12 @@ import json
 from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from ultralytics import YOLO
+from ultralytics.nn.tasks import DetectionModel
 import base64
 import torch
 import torch.nn as nn
+# ---- Fix PyTorch 2.6+ weights_only issue ----
 
-# ====================================
 # INITIALIZE FASTAPI APP
 # ====================================
 app = FastAPI(title="Pothole Detection API")
@@ -110,20 +111,39 @@ def _patch_old_aattn_forward(module):
 @app.on_event("startup")
 async def load_model():
     global model
+
     async with model_lock:
-        if model is None:
-            model_path = os.path.join(os.path.dirname(__file__), "best.pt")
-            if not os.path.exists(model_path):
-                raise FileNotFoundError("❌ best.pt not found at: " + model_path)
+        if model is not None:
+            return
 
-            print("🚀 Loading YOLOv12 model from:", model_path)
+        model_path = os.path.join(os.path.dirname(__file__), "best.pt")
+
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"best.pt not found at {model_path}")
+
+        print(f"🚀 Loading YOLO model from {model_path}")
+
+        try:
+            # Safe globals for newer PyTorch
+            if hasattr(torch.serialization, "safe_globals"):
+                with torch.serialization.safe_globals([DetectionModel]):
+                    model = YOLO(model_path)
+
+            elif hasattr(torch.serialization, "add_safe_globals"):
+                torch.serialization.add_safe_globals([DetectionModel])
+                model = YOLO(model_path)
+
+            else:
+                model = YOLO(model_path)
+
+        except Exception as e:
+            print("Safe loading failed, trying fallback:", e)
             model = YOLO(model_path)
-            patch_yolov12_aattn(model)
 
-            print("✅ Model loaded successfully")
-            print("📦 Classes:", model.names)
-            print("🧠 Device:", "GPU" if torch.cuda.is_available() else "CPU")
+        patch_yolov12_aattn(model)
 
+        print("✅ Model loaded")
+        print("Classes:", model.names)
 
 # ====================================
 # CUSTOM ANNOTATOR  (label always ABOVE box)
@@ -456,4 +476,8 @@ async def root():
 # ====================================
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 8000))
+    )

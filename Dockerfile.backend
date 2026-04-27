@@ -15,7 +15,7 @@ COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend code
-COPY backend/main.py .
+
 
 # Create models directory
 RUN mkdir -p models
